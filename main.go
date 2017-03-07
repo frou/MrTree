@@ -73,9 +73,9 @@ func run() error {
 		return err
 	}
 
-	fmt.Fprintf(mrFile,
-		"# This file was generated from SourceTree bookmarks by %v\n\n",
-		stdext.ExecutableBasename())
+	fmt.Fprintln(mrFile, "# This file was generated from SourceTree bookmarks",
+		"by the", stdext.ExecutableBasename(), "command")
+	fmt.Fprintln(mrFile)
 
 	if *flagDefaultRebase {
 		writeConfigSection(mrFile,
