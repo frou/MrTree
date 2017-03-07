@@ -148,3 +148,11 @@ func gitOriginFetchURLForRepo(repoPath string) (string, error) {
 	}
 	return string(bytes.TrimSpace(url)), nil
 }
+
+// TODO(DH): mr provides an interesting 'skip' action that can be configured
+// per repo. Maybe MrTree could accept pairs of foldernames and skip-actions
+// and include that skip action for all repos in that folder. Example skip
+// action: skip = test $(hostname) != "asdf"
+//
+// Or maybe boil it down to hostnames exclusively,  so what's provided to this
+// command are hostname+foldername pairs.
