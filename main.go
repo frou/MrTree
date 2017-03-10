@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 
@@ -107,17 +108,25 @@ func run() error {
 			}
 		}
 
+		var skipper *mrHostSkipper
+		re := regexp.MustCompile(`(?i)MR:(!)?([a-z0-9\-\.]+)$`)
+		if subExprs := re.FindStringSubmatch(m.Name); subExprs != nil {
+			skipper = new(mrHostSkipper)
+			skipper.exclude = len(subExprs[1]) > 0
+			skipper.host = subExprs[2]
+		}
+
 		originUrl, err := gitOriginFetchURLForRepo(m.Path)
 		if err != nil {
 			if err != errRepoHasNoOriginRemote {
 				return err
 			}
-			writeConfigSection(mrFile, repoPathInConfig)
+			writeConfigSection(mrFile, repoPathInConfig, skipper.String())
 		} else {
 			writeConfigSection(mrFile,
 				repoPathInConfig,
-				"checkout = git clone "+originUrl)
-
+				"checkout = git clone "+originUrl,
+				skipper.String())
 		}
 	}
 
@@ -127,6 +136,9 @@ func run() error {
 func writeConfigSection(w io.Writer, name string, lines ...string) {
 	fmt.Fprintf(w, "[%v]\n", name)
 	for _, l := range lines {
+		if l == "" {
+			continue
+		}
 		fmt.Fprintln(w, l)
 	}
 	fmt.Fprintln(w)
@@ -149,10 +161,20 @@ func gitOriginFetchURLForRepo(repoPath string) (string, error) {
 	return string(bytes.TrimSpace(url)), nil
 }
 
-// TODO(DH): mr provides an interesting 'skip' action that can be configured
-// per repo. Maybe MrTree could accept pairs of foldernames and skip-actions
-// and include that skip action for all repos in that folder. Example skip
-// action: skip = test $(hostname) != "asdf"
-//
-// Or maybe boil it down to hostnames exclusively,  so what's provided to this
-// command are hostname+foldername pairs.
+// ------------------------------------------------------------
+
+type mrHostSkipper struct {
+	host    string
+	exclude bool
+}
+
+func (hs *mrHostSkipper) String() string {
+	if hs == nil {
+		return ""
+	}
+	skipWhenOp := "!="
+	if hs.exclude {
+		skipWhenOp = "="
+	}
+	return fmt.Sprintf("skip = test $(hostname) %v '%v'", skipWhenOp, hs.host)
+}
