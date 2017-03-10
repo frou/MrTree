@@ -76,7 +76,6 @@ func run() error {
 
 	fmt.Fprintln(mrFile, "# This file was generated from SourceTree bookmarks",
 		"by the", stdext.ExecutableBasename(), "command")
-	fmt.Fprintln(mrFile)
 
 	if *flagDefaultRebase {
 		writeConfigSection(mrFile,
@@ -134,6 +133,7 @@ func run() error {
 }
 
 func writeConfigSection(w io.Writer, name string, lines ...string) {
+	fmt.Fprintln(w)
 	fmt.Fprintf(w, "[%v]\n", name)
 	for _, l := range lines {
 		if l == "" {
@@ -141,7 +141,6 @@ func writeConfigSection(w io.Writer, name string, lines ...string) {
 		}
 		fmt.Fprintln(w, l)
 	}
-	fmt.Fprintln(w)
 }
 
 func gitOriginFetchURLForRepo(repoPath string) (string, error) {
