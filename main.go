@@ -107,6 +107,9 @@ func run() error {
 			}
 		}
 
+		// TODO(DH): Allow a bookmark *folder* to have the skipper suffix and
+		// have it apply to its children. (what if the child has a suffix too?
+		// ignore or override parent?)
 		var skipper *mrHostSkipper
 		re := regexp.MustCompile(`(?i)MR:(!)?([a-z0-9\-\.]+)$`)
 		if subExprs := re.FindStringSubmatch(m.Name); subExprs != nil {
