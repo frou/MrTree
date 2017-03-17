@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 
@@ -111,11 +110,13 @@ func run() error {
 		// have it apply to its children. (what if the child has a suffix too?
 		// ignore or override parent?)
 		var skipper *mrHostSkipper
-		re := regexp.MustCompile(`(?i)MR:(!)?([a-z0-9\-\.]+)$`)
-		if subExprs := re.FindStringSubmatch(m.Name); subExprs != nil {
+
+		namedMatches, err := stdext.ExtractNamedMatches(
+			`(?i)MR:(?P<bang>!)?(?P<hostname>[a-z0-9\-\.]+)$`, m.Name)
+		if err == nil {
 			skipper = new(mrHostSkipper)
-			skipper.exclude = len(subExprs[1]) > 0
-			skipper.host = subExprs[2]
+			skipper.exclude = namedMatches["bang"] != ""
+			skipper.host = namedMatches["hostname"]
 		}
 
 		originUrl, err := gitOriginFetchURLForRepo(m.Path)
